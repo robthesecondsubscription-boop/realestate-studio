@@ -298,8 +298,17 @@ export default function App() {
         // Convert blob URL to public URL if needed
         let imageUrl = img.url;
         if (imageUrl.startsWith('blob:')) {
-          addLog('⚠ Please use Google Drive link instead of direct upload', 'error');
-          continue;
+          addLog('Uploading image to hosting...', 'info');
+          try {
+            const blobResp = await fetch(imageUrl);
+            const blob = await blobResp.blob();
+            const fd = new FormData();
+            fd.append('image', blob);
+            const r = await fetch('https://api.imgbb.com/1/upload?key=494d650d2ae8f6d05b863644e71c267d', { method: 'POST', body: fd });
+            const d = await r.json();
+            if (d.success) { imageUrl = d.data.url; addLog('Image ready!', 'success'); }
+            else { addLog('Upload failed - use Drive link instead', 'error'); continue; }
+          } catch(e) { addLog('Upload error: ' + e.message, 'error'); continue; }
         }
         // Step 1: Submit generation job
         const genResult = await apiPost("generate", {
