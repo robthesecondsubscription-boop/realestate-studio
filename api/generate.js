@@ -15,12 +15,14 @@ module.exports = async function handler(req, res) {
   const prompt = `${motionPrompts[motion]||motionPrompts["slow-push"]}. ${stylePrompts[style]||"cinematic"}. High-end real estate photography.`;
   const endpoint = modelMap[model] || "higgsfield-ai/dop/preview";
   const authToken = `${HF_API_KEY}:${HF_API_SECRET}`;
+  let directUrl = imageUrl;
+  const driveMatch = imageUrl.match(/\/file\/d\/([^\/]+)/);
+  if (driveMatch) directUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
   try {
     const response = await fetch(`https://platform.higgsfield.ai/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type":"application/json", "Authorization":`Key ${authToken}`, "Accept":"application/json" },
-      const directUrl = imageUrl.includes("drive.google.com/file/d/") ? "https://drive.google.com/uc?export=download&id=" + imageUrl.match(/\/file\/d\/([^\/]+)/)?.[1] : imageUrl;
-    body: JSON.stringify({ image_url: directUrl, prompt, duration: 5 })
+      body: JSON.stringify({ image_url: directUrl, prompt, duration: 5 })
     });
     const text = await response.text();
     console.log("Higgsfield response:", response.status, text);
