@@ -1,17 +1,20 @@
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
   const { id } = req.query;
   const HF_API_KEY = process.env.HF_API_KEY;
   const HF_API_SECRET = process.env.HF_API_SECRET;
-  if (!HF_API_KEY) return res.status(500).json({ error: "API key not configured" });
-  const authToken = HF_API_SECRET ? `${HF_API_KEY}:${HF_API_SECRET}` : HF_API_KEY;
+  const authToken = `${HF_API_KEY}:${HF_API_SECRET}`;
   try {
-    const response = await fetch(`https://cloud.higgsfield.ai/api/v1/requests/${id}`, { headers:{"Authorization":`Bearer ${authToken}`} });
+    const response = await fetch(`https://platform.higgsfield.ai/requests/${id}/status`, {
+      headers: { "Authorization":`Key ${authToken}`, "Accept":"application/json" }
+    });
     const data = await response.json();
-    const videoUrl = data.output?.video_url || data.result?.videos?.[0]?.url || data.videos?.[0]?.url || null;
-    return res.status(200).json({ requestId:id, status:data.status?.toLowerCase(), videoUrl, raw:data });
-  } catch(err) { return res.status(500).json({ error:err.message }); }
+    console.log("Status response:", JSON.stringify(data));
+    return res.status(200).json({
+      requestId: data.request_id,
+      status: data.status,
+      videoUrl: data.video?.url || null
+    });
+  } catch(err) { return res.status(500).json({ error: err.message }); }
 }
