@@ -295,9 +295,25 @@ export default function App() {
     for (const img of targets) {
       addLog(`Submitting ${img.name} → Higgsfield API...`, "info");
       try {
+        // Convert blob URL to public URL if needed
+        let imageUrl = img.url;
+        if (imageUrl.startsWith('blob:')) {
+          addLog('Converting image for upload...', 'info');
+          const blobResp = await fetch(imageUrl);
+          const blob = await blobResp.blob();
+          const base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(blob);
+          });
+          const uploadResult = await apiPost('upload', { imageBase64: base64, mimeType: blob.type });
+          if (uploadResult.error) { addLog('Upload failed: ' + uploadResult.error, 'error'); continue; }
+          imageUrl = uploadResult.url;
+          addLog('Image uploaded successfully', 'success');
+        }
         // Step 1: Submit generation job
         const genResult = await apiPost("generate", {
-          imageUrl: img.url,
+          imageUrl,
           motion,
           style: styleMode,
           model: modelChoice,
