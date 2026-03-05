@@ -23,6 +23,7 @@ module.exports = async function handler(req, res) {
     const response = await fetch(`https://platform.higgsfield.ai/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type":"application/json", "Authorization":`Key ${authToken}`, "Accept":"application/json" },
+      redirect: "follow",
       body: JSON.stringify({ image_url: directUrl, prompt, duration: 5 })
     });
     const text = await response.text();
