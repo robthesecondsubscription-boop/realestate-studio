@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
   const driveMatch = imageUrl.match(/id=([^&]+)|\/file\/d\/([^\/]+)/);
   const driveId = driveMatch ? (driveMatch[1] || driveMatch[2]) : null;
   const finalUrl = driveId
-    ? `https://realestate-studio.vercel.app/api/image-proxy?id=${driveId}`
+    ? `https://realestate-studio.vercel.app/api/proxy?id=${driveId}`
     : imageUrl;
   console.log("Using image URL:", finalUrl);
   try {
