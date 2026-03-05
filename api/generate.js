@@ -5,6 +5,7 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   const { imageUrl, motion, style, model } = req.body;
+  console.log("Body received:", JSON.stringify(req.body));
   if (!imageUrl) return res.status(400).json({ error: "imageUrl is required" });
   const HF_API_KEY = process.env.HF_API_KEY;
   const HF_API_SECRET = process.env.HF_API_SECRET;
