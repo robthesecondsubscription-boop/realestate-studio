@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
   const prompt = `${motionPrompts[motion]||motionPrompts["slow-push"]}. ${stylePrompts[style]||"cinematic"}. High-end real estate photography.`;
   const authToken = `${HF_API_KEY}:${HF_API_SECRET}`;
   try {
-    const response = await fetch("https://cloud.higgsfield.ai/api/v1/image2video/dop", {
+    const response = await fetch("https://cloud.higgsfield.ai/api/v1/requests", {
       method: "POST",
       headers: { "Content-Type":"application/json", "Authorization":`Key ${authToken}` },
       body: JSON.stringify({ model: modelMap[model]||"dop-turbo", prompt, input_images:[{ type:"image_url", image_url: imageUrl }] })
