@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
   const endpoint = modelMap[model] || "higgsfield-ai/dop/turbo";
   const driveMatch = imageUrl.match(/id=([^&]+)|\/file\/d\/([^\/]+)/);
   const driveId = driveMatch ? (driveMatch[1] || driveMatch[2]) : null;
-  const finalUrl = driveId
+  const finalUrl = driveId ? `https://wsrv.nl/?url=drive.google.com/uc%3Fexport%3Ddownload%26id=${driveId}` : imageUrl;
     ? `https://realestate-studio.vercel.app/api/proxy?id=${driveId}`
     : imageUrl;
   console.log("Using image URL:", finalUrl);
