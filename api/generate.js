@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({ image_url: directUrl, prompt, duration: 5 })
     });
     const text = await response.text();
-    console.log("Higgsfield response:", response.status, text);
+    console.log("HF_STATUS:", response.status, "HF_BODY:", text.substring(0,300));
     if (!response.ok) return res.status(response.status).json({ error:`Higgsfield error: ${response.status}`, details: text });
     const data = JSON.parse(text);
     return res.status(200).json({ requestId: data.request_id, status: data.status || "queued" });
