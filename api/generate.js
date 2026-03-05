@@ -19,7 +19,8 @@ module.exports = async function handler(req, res) {
     const response = await fetch(`https://platform.higgsfield.ai/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type":"application/json", "Authorization":`Key ${authToken}`, "Accept":"application/json" },
-      body: JSON.stringify({ image_url: imageUrl, prompt, duration: 5 })
+      const directUrl = imageUrl.includes("drive.google.com/file/d/") ? "https://drive.google.com/uc?export=download&id=" + imageUrl.match(/\/file\/d\/([^\/]+)/)?.[1] : imageUrl;
+    body: JSON.stringify({ image_url: directUrl, prompt, duration: 5 })
     });
     const text = await response.text();
     console.log("Higgsfield response:", response.status, text);
