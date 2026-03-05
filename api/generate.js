@@ -15,17 +15,12 @@ module.exports = async function handler(req, res) {
   const modelMap = { "dop-turbo":"higgsfield-ai/dop/turbo","dop-standard":"higgsfield-ai/dop/standard","dop-lite":"higgsfield-ai/dop/lite" };
   const prompt = `${motionPrompts[motion]||motionPrompts["slow-push"]}. ${stylePrompts[style]||"cinematic"}. High-end real estate photography.`;
   const endpoint = modelMap[model] || "higgsfield-ai/dop/turbo";
-  const driveMatch = imageUrl.match(/id=([^&]+)|\/file\/d\/([^\/]+)/);
-  const driveId = driveMatch ? (driveMatch[1] || driveMatch[2]) : null;
-  const finalUrl = driveId ? `https://wsrv.nl/?url=drive.google.com/uc%3Fexport%3Ddownload%26id=${driveId}` : imageUrl;
-    ? `https://realestate-studio.vercel.app/api/proxy?id=${driveId}`
-    : imageUrl;
-  console.log("Using image URL:", finalUrl);
+  console.log("Received imageUrl:", imageUrl);
   try {
     const response = await fetch(`https://platform.higgsfield.ai/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type":"application/json", "Authorization":`Key ${authToken}`, "Accept":"application/json" },
-      body: JSON.stringify({ image_url: finalUrl, prompt, duration: 5 })
+      body: JSON.stringify({ image_url: imageUrl, prompt, duration: 5 })
     });
     const text = await response.text();
     console.log("HF_STATUS:", response.status, "HF_BODY:", text.substring(0,300));
