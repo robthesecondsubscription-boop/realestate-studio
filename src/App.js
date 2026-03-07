@@ -325,7 +325,8 @@ export default function App() {
         const geminiData = await geminiResp.json();
         addLog('Gemini raw: ' + JSON.stringify(geminiData).slice(0, 200), 'info');
         const parts = geminiData?.candidates?.[0]?.content?.parts || [];
-        const imagePart = parts.find(p => p.inline_data?.mime_type?.startsWith('image/'));
+        const imagePart = parts.find(p => p.inline_data?.mime_type?.startsWith('image/')) || parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
+        if (imagePart && imagePart.inlineData) { imagePart.inline_data = imagePart.inlineData; }
         const textPart = parts.find(p => p.text);
         if (textPart) addLog('Gemini says: ' + textPart.text?.slice(0,100), 'info');
         if (geminiData.error) addLog('Gemini error: ' + JSON.stringify(geminiData.error), 'error');
