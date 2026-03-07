@@ -325,6 +325,9 @@ export default function App() {
         const geminiData = await geminiResp.json();
         const parts = geminiData?.candidates?.[0]?.content?.parts || [];
         const imagePart = parts.find(p => p.inline_data?.mime_type?.startsWith('image/'));
+        const textPart = parts.find(p => p.text);
+        if (textPart) addLog('Gemini says: ' + textPart.text?.slice(0,100), 'info');
+        if (geminiData.error) addLog('Gemini error: ' + JSON.stringify(geminiData.error), 'error');
 
         if (!imagePart) {
           addLog(`⚠ Gemini returned no image for ${img.name} — using original`, "error");
