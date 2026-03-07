@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+
+[build.nixpacksPlan.phases.install]
+cmds = ["npm install"]
+
+[deploy]
+startCommand = "npm run build && node server.js"
