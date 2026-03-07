@@ -323,6 +323,7 @@ export default function App() {
         );
 
         const geminiData = await geminiResp.json();
+        addLog('Gemini raw: ' + JSON.stringify(geminiData).slice(0, 200), 'info');
         const parts = geminiData?.candidates?.[0]?.content?.parts || [];
         const imagePart = parts.find(p => p.inline_data?.mime_type?.startsWith('image/'));
         const textPart = parts.find(p => p.text);
