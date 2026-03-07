@@ -356,7 +356,7 @@ export default function App() {
         }
 
       } catch(err) {
-        addLog(`⚠ Error enhancing ${img.name}: ${err.message}`, "error");
+        addLog(`⚠ Error enhancing ${img.name}: ${err.message} / ${err.stack?.slice(0,100)}`, "error");
         setImages(p => p.map(im => im.id===img.id ? {...im, status:"enhanced"} : im));
       }
     }
