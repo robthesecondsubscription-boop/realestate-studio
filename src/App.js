@@ -306,7 +306,7 @@ export default function App() {
         const prompt = `You are enhancing a real estate photograph. Remove any watermarks, logos, or branding visible in the image. Then enhance this image into an ultra high-resolution, high-detail cinematic frame. Keep the original composition, subject position, and framing exactly the same. Do not change objects or structure — only improve quality and realism. Increase sharpness, clarity, and dynamic range while preserving natural textures. Make lighting look professionally captured on ARRI Alexa 35, cinematic color grading, soft highlight roll-off, rich shadows, realistic contrast, and true-to-life colors. Add subtle depth, refined texture detail, realistic materials, and natural light falloff. Make it look like a high-budget film still shot with premium cinema lenses. Crop or adjust to 16:9 aspect ratio. Ultra-detailed, 8K resolution, professional HDR balance, natural cinematic tones, premium production quality. Output only the enhanced image.`;
 
         const geminiResp = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GEMINI_KEY}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GEMINI_KEY}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -317,7 +317,7 @@ export default function App() {
                   { inline_data: { mime_type: mimeType, data: base64 } }
                 ]
               }],
-              generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
+              generationConfig: { responseModalities: ["IMAGE", "TEXT"], imageConfig: { aspectRatio: "16:9" } }
             })
           }
         );
