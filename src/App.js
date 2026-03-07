@@ -310,24 +310,36 @@ export default function App() {
             else { addLog('Upload failed - use Drive link instead', 'error'); continue; }
           } catch(e) { addLog('Upload error: ' + e.message, 'error'); continue; }
         }
-        // Step 1: Submit generation job
-        const genResult = await apiPost("generate", {
-          imageUrl,
-          motion,
-          style: styleMode,
-          model: modelChoice,
-        });
+        // Step 1: Submit generation job directly to Higgsfield
+        const motionMap = { "slow-push":"slow cinematic push-in", "orbit":"smooth orbit", "pan":"elegant pan", "crane":"crane shot", "dolly":"dolly zoom" };
+        const styleMap = { "cinematic":"cinematic color grade", "luxury":"luxury warm tones", "warm-golden":"golden hour", "twilight":"twilight moody", "airy":"bright airy light" };
+        const modelMap = { "dop-turbo":"higgsfield-ai/dop/turbo", "dop-standard":"higgsfield-ai/dop/standard", "dop-lite":"higgsfield-ai/dop/lite" };
+        const prompt = (motionMap[motion] || "slow cinematic push-in") + ". " + (styleMap[styleMode] || "cinematic") + ". Real estate photography.";
+        const endpoint = modelMap[modelChoice] || "higgsfield-ai/dop/turbo";
+        const authToken = higgsKey + ":" + higgsSecret;
 
-        if (genResult.error) {
-          addLog(`⚠ ${img.name}: ${genResult.error}`, "error");
-          if (genResult.details) addLog(`  Details: ${genResult.details}`, "error");
+        let genResult;
+        try {
+          const genResp = await fetch("https://platform.higgsfield.ai/" + endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Key " + authToken, "Accept": "application/json" },
+            body: JSON.stringify({ image_url: imageUrl, prompt, duration: 5 })
+          });
+          genResult = await genResp.json();
+        } catch(e) {
+          addLog(`⚠ ${img.name}: ${e.message}`, "error");
           continue;
         }
 
-        const requestId = genResult.requestId;
+        if (!genResult.request_id) {
+          addLog(`⚠ ${img.name}: ${JSON.stringify(genResult)}`, "error");
+          continue;
+        }
+
+        const requestId = genResult.request_id;
         addLog(`✓ Job submitted — ID: ${requestId?.slice(0,8)}...`, "success");
 
-        // Step 2: Poll for completion
+        // Step 2: Poll for completion directly from Higgsfield
         addLog(`Waiting for Kling 3.0 to render ${img.name.replace(".jpg","").replace(".png","")}...`, "info");
         let videoUrl = null;
         let attempts = 0;
@@ -335,10 +347,16 @@ export default function App() {
 
         while (attempts < maxAttempts) {
           await new Promise(r => setTimeout(r, 5000)); // poll every 5s
-          const statusResult = await apiGet(`status/${requestId}`);
+          let statusResult;
+          try {
+            const statusResp = await fetch("https://platform.higgsfield.ai/requests/" + requestId + "/status", {
+              headers: { "Authorization": "Key " + authToken, "Accept": "application/json" }
+            });
+            statusResult = await statusResp.json();
+          } catch(e) { attempts++; continue; }
 
-          if (statusResult.status === "completed" && statusResult.videoUrl) {
-            videoUrl = statusResult.videoUrl;
+          if (statusResult.status === "completed" && statusResult.video?.url) {
+            videoUrl = statusResult.video.url;
             break;
           } else if (statusResult.status === "failed") {
             addLog(`⚠ Generation failed for ${img.name}`, "error");
