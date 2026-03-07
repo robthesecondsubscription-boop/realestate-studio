@@ -262,20 +262,101 @@ export default function App() {
     setDriveLoaded(true);
   };
 
-  // ── ENHANCE (Simulated — Higgsfield Cloud doesn't have separate enhancement endpoint) ──
+  // ── ENHANCE (Real Gemini / Nano Banana API) ──────────────────────────────
   const handleEnhance = async () => {
     if (!images.length) return;
     setIsRunning(true);
-    addLog("▶ Running Nano Banana enhancement via Higgsfield...", "info");
-    addLog("  Preset: Real Estate HDR · 4× Upscale · Auto Color", "info");
+    addLog("▶ Running Nano Banana enhancement via Gemini...", "info");
+    addLog("  Logo removal · Cinematic enhancement · 16:9 crop", "info");
 
-    // Nano Banana runs as part of the Higgsfield pipeline automatically
-    // We simulate the enhancement step here
-    for (let i=0; i<images.length; i++) {
-      await new Promise(r => setTimeout(r, 900));
-      setImages(p => p.map(im => im.id===images[i].id ? {...im, status:"enhanced"} : im));
-      addLog(`✓ ${images[i].name} — enhanced`, "success");
+    const GEMINI_KEY = "AIzaSyBvRaDP-5FNp5sZrMKaQr-uX4_i_qRluqM";
+    const IMGBB_KEY = "494d650d2ae8f6d05b863644e71c267d";
+
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i];
+      setImages(p => p.map(im => im.id===img.id ? {...im, status:"processing"} : im));
+      addLog(`Processing ${img.name}...`, "info");
+
+      try {
+        // Step 1: Get image as base64
+        let imageUrl = img.url;
+        if (imageUrl.startsWith('blob:')) {
+          const blobResp = await fetch(imageUrl);
+          const blob = await blobResp.blob();
+          const fd = new FormData();
+          fd.append('image', blob);
+          const r = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, { method: 'POST', body: fd });
+          const d = await r.json();
+          if (d.success) imageUrl = d.data.url;
+          else { addLog(`⚠ Upload failed for ${img.name}`, "error"); continue; }
+        }
+
+        // Fetch image and convert to base64
+        const imgResp = await fetch(imageUrl);
+        const imgBlob = await imgResp.blob();
+        const base64 = await new Promise((res) => {
+          const reader = new FileReader();
+          reader.onloadend = () => res(reader.result.split(',')[1]);
+          reader.readAsDataURL(imgBlob);
+        });
+        const mimeType = imgBlob.type || 'image/jpeg';
+
+        // Step 2: Call Gemini image editing API
+        addLog(`  Enhancing ${img.name} with Nano Banana...`, "info");
+        const prompt = `You are enhancing a real estate photograph. Remove any watermarks, logos, or branding visible in the image. Then enhance this image into an ultra high-resolution, high-detail cinematic frame. Keep the original composition, subject position, and framing exactly the same. Do not change objects or structure — only improve quality and realism. Increase sharpness, clarity, and dynamic range while preserving natural textures. Make lighting look professionally captured on ARRI Alexa 35, cinematic color grading, soft highlight roll-off, rich shadows, realistic contrast, and true-to-life colors. Add subtle depth, refined texture detail, realistic materials, and natural light falloff. Make it look like a high-budget film still shot with premium cinema lenses. Crop or adjust to 16:9 aspect ratio. Ultra-detailed, 8K resolution, professional HDR balance, natural cinematic tones, premium production quality. Output only the enhanced image.`;
+
+        const geminiResp = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: prompt },
+                  { inline_data: { mime_type: mimeType, data: base64 } }
+                ]
+              }],
+              generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
+            })
+          }
+        );
+
+        const geminiData = await geminiResp.json();
+        const parts = geminiData?.candidates?.[0]?.content?.parts || [];
+        const imagePart = parts.find(p => p.inline_data?.mime_type?.startsWith('image/'));
+
+        if (!imagePart) {
+          addLog(`⚠ Gemini returned no image for ${img.name} — using original`, "error");
+          setImages(p => p.map(im => im.id===img.id ? {...im, status:"enhanced"} : im));
+          continue;
+        }
+
+        // Step 3: Upload enhanced image to imgbb
+        const enhancedBase64 = imagePart.inline_data.data;
+        const byteChars = atob(enhancedBase64);
+        const byteArr = new Uint8Array(byteChars.length);
+        for (let j = 0; j < byteChars.length; j++) byteArr[j] = byteChars.charCodeAt(j);
+        const enhancedBlob = new Blob([byteArr], { type: imagePart.inline_data.mime_type });
+        const fd2 = new FormData();
+        fd2.append('image', enhancedBlob);
+        const uploadResp = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, { method: 'POST', body: fd2 });
+        const uploadData = await uploadResp.json();
+
+        if (uploadData.success) {
+          setImages(p => p.map(im => im.id===img.id ? {...im, status:"enhanced", url: uploadData.data.url} : im));
+          addLog(`✓ ${img.name} — enhanced & ready!`, "success");
+        } else {
+          addLog(`⚠ Upload failed for enhanced ${img.name}`, "error");
+          setImages(p => p.map(im => im.id===img.id ? {...im, status:"enhanced"} : im));
+        }
+
+      } catch(err) {
+        addLog(`⚠ Error enhancing ${img.name}: ${err.message}`, "error");
+        setImages(p => p.map(im => im.id===img.id ? {...im, status:"enhanced"} : im));
+      }
     }
+
     addLog("✓ All images enhanced — ready for Kling 3.0", "success");
     setIsRunning(false);
   };
