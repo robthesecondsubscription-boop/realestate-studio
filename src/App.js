@@ -12,7 +12,7 @@ const MOTION_OPTIONS = [
 const STYLE_OPTIONS = ["cinematic","luxury","warm-golden","twilight","airy"];
 
 // ─── API helpers ────────────────────────────────────────────────────────────
-const API_BASE = ""; // Same domain — Vercel routes /api/* automatically
+const API_BASE = "https://realestate-studio-production-7274.up.railway.app";
 
 async function apiPost(path, body) {
   const r = await fetch(`${API_BASE}/api/${path}`, {
