@@ -656,6 +656,35 @@ export default function App() {
             )}
           </Card>
         </div>
+        {images.some(i=>i.status==="enhanced" && i.originalUrl) && (
+          <Card>
+            <SLabel>Before / After Preview</SLabel>
+            <p style={{ fontSize:12,color:"rgba(255,255,255,.35)",fontFamily:"sans-serif",margin:"0 0 16px" }}>Review enhanced photos — click "Use Original" to revert any image.</p>
+            <div style={{ display:"flex",flexDirection:"column",gap:20 }}>
+              {images.filter(i=>i.originalUrl).map(img => (
+                <div key={img.id} style={{ border:"1px solid rgba(255,255,255,.08)",borderRadius:12,overflow:"hidden" }}>
+                  <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:2 }}>
+                    <div style={{ position:"relative" }}>
+                      <img src={img.originalUrl} alt="Before" style={{ width:"100%",height:180,objectFit:"cover",display:"block" }}/>
+                      <div style={{ position:"absolute",top:8,left:8,background:"rgba(0,0,0,.6)",borderRadius:4,padding:"3px 8px",fontSize:11,color:"rgba(255,255,255,.7)",fontFamily:"sans-serif" }}>Before</div>
+                    </div>
+                    <div style={{ position:"relative" }}>
+                      <img src={img.url} alt="After" style={{ width:"100%",height:180,objectFit:"cover",display:"block" }}/>
+                      <div style={{ position:"absolute",top:8,left:8,background:"rgba(107,222,143,.25)",borderRadius:4,padding:"3px 8px",fontSize:11,color:"#6bde8f",fontFamily:"sans-serif" }}>Enhanced ✓</div>
+                    </div>
+                  </div>
+                  <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(255,255,255,.02)" }}>
+                    <span style={{ fontSize:12,color:"rgba(255,255,255,.6)",fontFamily:"'DM Mono',monospace" }}>{img.name}</span>
+                    <Btn variant="ghost" onClick={() => setImages(p => p.map(im => im.id===img.id ? {...im, url: im.originalUrl} : im))}>✗ Use Original</Btn>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        }
+        <div style={{display:"none"}}>
+          </Card>
+        </div>
       </div>
     ),
 
