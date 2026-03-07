@@ -269,7 +269,7 @@ export default function App() {
     addLog("▶ Running Nano Banana enhancement via Gemini...", "info");
     addLog("  Logo removal · Cinematic enhancement · 16:9 crop", "info");
 
-    const GEMINI_KEY = "AIzaSyCw0s1CX-gVHHV0C-HgbsepKAEtIQZJ9Zk";
+    const GEMINI_KEY = "AIzaSyB0v0qZRzTF9dv8h0TeznFRtYyrUl5Wt5c";
     const IMGBB_KEY = "494d650d2ae8f6d05b863644e71c267d";
 
     for (let i = 0; i < images.length; i++) {
